@@ -22,12 +22,12 @@ namespace Subnautica_bhaptics
             // Make my own logger so it can be accessed from the Tactsuit class
             Log = base.Logger;
             // Plugin startup logic
-            Logger.LogMessage("Plugin Compound_bhaptics is loaded!");
+            Logger.LogMessage("Plugin Subnautica_bhaptics is loaded!");
             tactsuitVr = new TactsuitVR();
             // one startup heartbeat so you know the vest works correctly
             tactsuitVr.PlaybackHaptics("HeartBeat");
             // patch all functions
-            var harmony = new Harmony("bhaptics.patch.compound");
+            var harmony = new Harmony("bhaptics.patch.Subnautica_bhaptics");
             harmony.PatchAll();
         }
     }
@@ -51,6 +51,20 @@ namespace Subnautica_bhaptics
 
     #region Health
 
+    [HarmonyPatch(typeof(Player), "OnKill")]
+    public class bhaptics_OnDeath
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("Death");
+        }
+    }
+
     [HarmonyPatch(typeof(uGUI_OxygenBar), "OnPulse")]
     public class bhaptics_OnLowOxygen
     {
@@ -62,7 +76,7 @@ namespace Subnautica_bhaptics
                 return;
             }
             float pulseDelay = Traverse.Create(__instance).Field("pulseDelay").GetValue<float>();
-            if (pulseDelay >= 2 || !Utils.GetLocalPlayerComp().isUnderwater.value)
+            if (pulseDelay >= 2 || !Utils.GetLocalPlayerComp().isUnderwaterForSwimming.value)
             {
                 Plugin.tactsuitVr.StopLowOxygen();
                 return;
@@ -106,6 +120,40 @@ namespace Subnautica_bhaptics
             Plugin.tactsuitVr.StopLowFood();
         }
     }
+
+    [HarmonyPatch(typeof(uGUI_HealthBar), "OnPulse")]
+    public class bhaptics_OnLowHealthStart
+    {
+        [HarmonyPostfix]
+        public static void Postfix(uGUI_HealthBar __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            float pulseDelay = Traverse.Create(__instance).Field("pulseDelay").GetValue<float>();
+            if (pulseDelay <= 1.85f)
+            {
+                Plugin.tactsuitVr.StartHeartBeat();
+                return;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(uGUI_HealthBar), "OnHealDamage")]
+    public class bhaptics_OnLowHealthStop
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.StopHeartBeat();
+        }
+    }
+
     #endregion
 }
 
