@@ -31,7 +31,9 @@ namespace Subnautica_bhaptics
             harmony.PatchAll();
         }
     }
-    
+
+    #region Actions
+
     [HarmonyPatch(typeof(Inventory), "OnAddItem")]
     public class bhaptics_OnPickupItem
     {
@@ -45,6 +47,9 @@ namespace Subnautica_bhaptics
             Plugin.tactsuitVr.PlaybackHaptics("PickUpItem");
         }
     }
+    #endregion
+
+    #region Health
 
     [HarmonyPatch(typeof(uGUI_OxygenBar), "OnPulse")]
     public class bhaptics_OnLowOxygen
@@ -68,5 +73,39 @@ namespace Subnautica_bhaptics
             }
         }
     }
+
+    [HarmonyPatch(typeof(uGUI_FoodBar), "OnPulse")]
+    public class bhaptics_OnLowFoodStart
+    {
+        [HarmonyPostfix]
+        public static void Postfix(uGUI_FoodBar __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            float pulseDelay = Traverse.Create(__instance).Field("pulseDelay").GetValue<float>();
+            if (pulseDelay <= 0.85f)
+            {
+                Plugin.tactsuitVr.StartLowFood();
+                return;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(uGUI_FoodBar), "OnEat")]
+    public class bhaptics_OnLowFoodStop
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.StopLowFood();
+        }
+    }
+    #endregion
 }
 
