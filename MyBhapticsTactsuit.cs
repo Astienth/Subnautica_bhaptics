@@ -18,6 +18,7 @@ namespace MyBhapticsTactsuit
         private static ManualResetEvent HeartBeat_mrse = new ManualResetEvent(false);
         private static ManualResetEvent LowOxygen_mrse = new ManualResetEvent(false);
         private static ManualResetEvent LowFood_mrse = new ManualResetEvent(false);
+        private static ManualResetEvent LowWater_mrse = new ManualResetEvent(false);
         // dictionary of all feedback patterns found in the bHaptics directory
         public Dictionary<String, FileInfo> FeedbackMap = new Dictionary<String, FileInfo>();
 
@@ -43,7 +44,7 @@ namespace MyBhapticsTactsuit
             {
                 // Check if reset event is active
                 LowOxygen_mrse.WaitOne();
-                PlaybackHaptics("HeartBeat");
+                PlaybackHaptics("lowOxygen");
                 Thread.Sleep(1000);
             }
         }
@@ -53,7 +54,17 @@ namespace MyBhapticsTactsuit
             {
                 // Check if reset event is active
                 LowFood_mrse.WaitOne();
-                PlaybackHaptics("HeartBeat");
+                PlaybackHaptics("lowFood");
+                Thread.Sleep(1000);
+            }
+        }
+        public void LowWaterFunc()
+        {
+            while (true)
+            {
+                // Check if reset event is active
+                LowWater_mrse.WaitOne();
+                PlaybackHaptics("Eating", true, 0.5f);
                 Thread.Sleep(1000);
             }
         }
@@ -74,6 +85,12 @@ namespace MyBhapticsTactsuit
             LOG("Starting HeartBeat thread...");
             Thread HeartBeatThread = new Thread(HeartBeatFunc);
             HeartBeatThread.Start();
+            Thread LowOxygentThread = new Thread(LowOxygenFunc);
+            LowOxygentThread.Start();
+            Thread LowFoodThread = new Thread(LowFoodFunc);
+            LowFoodThread.Start();
+            Thread LowWaterThread = new Thread(LowFoodFunc);
+            LowWaterThread.Start();
         }
 
         public void LOG(string logStr)
@@ -161,6 +178,16 @@ namespace MyBhapticsTactsuit
         public void StopLowFood()
         {
             LowFood_mrse.Reset();
+        }
+
+        public void StartLowWater()
+        {
+            LowWater_mrse.Set();
+        }
+
+        public void StopLowWater()
+        {
+            LowWater_mrse.Reset();
         }
 
         public void StopHapticFeedback(String effect)

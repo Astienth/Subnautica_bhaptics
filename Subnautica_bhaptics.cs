@@ -45,5 +45,28 @@ namespace Subnautica_bhaptics
             Plugin.tactsuitVr.PlaybackHaptics("PickUpItem");
         }
     }
+
+    [HarmonyPatch(typeof(uGUI_OxygenBar), "OnPulse")]
+    public class bhaptics_OnLowOxygen
+    {
+        [HarmonyPostfix]
+        public static void Postfix(uGUI_OxygenBar __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            float pulseDelay = Traverse.Create(__instance).Field("pulseDelay").GetValue<float>();
+            if (pulseDelay >= 2 || !Utils.GetLocalPlayerComp().isUnderwater.value)
+            {
+                Plugin.tactsuitVr.StopLowOxygen();
+                return;
+            }
+            if (pulseDelay < 2)
+            {
+                Plugin.tactsuitVr.StartLowOxygen();
+            }
+        }
+    }
 }
 
