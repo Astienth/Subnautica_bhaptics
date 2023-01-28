@@ -31,9 +31,9 @@ namespace Subnautica_bhaptics
             harmony.PatchAll();
         }
     }
-    /*
-    [HarmonyPatch(typeof(Food), "OnEat", new Type[] { })]
-    public class bhaptics_OnEat
+    
+    [HarmonyPatch(typeof(Inventory), "OnAddItem")]
+    public class bhaptics_OnPickupItem
     {
         [HarmonyPostfix]
         public static void Postfix()
@@ -42,9 +42,8 @@ namespace Subnautica_bhaptics
             {
                 return;
             }
-            Plugin.tactsuitVr.PlaybackHaptics("Eating");
+            Plugin.tactsuitVr.PlaybackHaptics("PickUpItem");
         }
     }
-    */
 }
 
