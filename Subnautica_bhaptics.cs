@@ -154,6 +154,7 @@ namespace Subnautica_bhaptics
     #region Equipments
 
     [HarmonyPatch(typeof(Knife), "IsValidTarget")]
+    [HarmonyPatch(typeof(StasisRifle), "Fire")]
     public class bhaptics_OnKnifeAttack
     {
         [HarmonyPostfix]
@@ -169,6 +170,11 @@ namespace Subnautica_bhaptics
     }
 
     [HarmonyPatch(typeof(ScannerTool), "OnRightHandDown")]
+    [HarmonyPatch(typeof(AirBladder), "OnRightHandDown")]
+    [HarmonyPatch(typeof(BuilderTool), "OnRightHandDown")]
+    [HarmonyPatch(typeof(Constructor), "OnRightHandDown")]
+    [HarmonyPatch(typeof(PropulsionCannonWeapon), "OnRightHandDown")]
+    [HarmonyPatch(typeof(StasisRifle), "OnRightHandDown")]
     public class bhaptics_Onscanning
     {
         [HarmonyPostfix]
