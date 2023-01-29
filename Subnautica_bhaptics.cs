@@ -86,6 +86,67 @@ namespace Subnautica_bhaptics
                 Plugin.tactsuitVr.StopSwimming();
             }
         }
+
+        [HarmonyPatch(typeof(PrecursorTeleporter), "OnPlayerCinematicModeEnd")]
+        public class bhaptics_OnTeleportingStart
+        {
+            [HarmonyPostfix]
+            public static void Postfix()
+            {
+                if (Plugin.tactsuitVr.suitDisabled)
+                {
+                    return;
+                }
+                Plugin.tactsuitVr.StartTeleportation();
+            }
+        }
+
+        [HarmonyPatch(typeof(Player), "CompleteTeleportation")]
+        public class bhaptics_OnTeleportingStop
+        {
+            [HarmonyPostfix]
+            public static void Postfix()
+            {
+                if (Plugin.tactsuitVr.suitDisabled)
+                {
+                    return;
+                }
+                Plugin.tactsuitVr.StopTeleportation();
+            }
+        }
+
+        [HarmonyPatch(typeof(Player), "UpdateIsUnderwaterForSwimming")]
+        public class bhaptics_OnExitWater
+        {
+            public static bool isUnderwaterForSwimming = false;
+
+            [HarmonyPrefix]
+            public static void Prefix(Player __instance)
+            {
+                if (Plugin.tactsuitVr.suitDisabled)
+                {
+                    return;
+                }
+                isUnderwaterForSwimming = __instance.isUnderwaterForSwimming.value;
+            }
+
+            [HarmonyPostfix]
+            public static void Postfix(Player __instance)
+            {
+                if (Plugin.tactsuitVr.suitDisabled)
+                {
+                    return;
+                }
+                if (__instance.isUnderwaterForSwimming.value != isUnderwaterForSwimming)
+                {
+                    Plugin.tactsuitVr.PlaybackHaptics(
+                        (!isUnderwaterForSwimming) ? "EnterWater_Vest" : "ExitWater_Vest"); 
+                    Plugin.tactsuitVr.PlaybackHaptics(
+                        (!isUnderwaterForSwimming) ? "EnterWater_Arms" : "ExitWater_Arms");
+                }
+                isUnderwaterForSwimming = __instance.isUnderwaterForSwimming.value;
+            }
+        }
     }
 
     #endregion
@@ -107,10 +168,25 @@ namespace Subnautica_bhaptics
         }
     }
 
+    [HarmonyPatch(typeof(ScannerTool), "OnRightHandDown")]
+    public class bhaptics_Onscanning
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Vest");
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Arm_R");
+        }
+    }
+
     #endregion
 
     #region Health
-    
+
     [HarmonyPatch(typeof(Player), "OnKill")]
     public class bhaptics_OnDeath
     {
@@ -122,6 +198,7 @@ namespace Subnautica_bhaptics
                 return;
             }
             Plugin.tactsuitVr.PlaybackHaptics("Death");
+            Plugin.tactsuitVr.StopThreads();
         }
     }
 

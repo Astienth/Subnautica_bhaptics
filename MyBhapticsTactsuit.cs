@@ -20,6 +20,7 @@ namespace MyBhapticsTactsuit
         private static ManualResetEvent LowFood_mrse = new ManualResetEvent(false);
         private static ManualResetEvent LowWater_mrse = new ManualResetEvent(false);
         private static ManualResetEvent Swimming_mrse = new ManualResetEvent(false);
+        private static ManualResetEvent Teleportation_mrse = new ManualResetEvent(false);
 
         public int SwimmingDelay = 1000;
         public float SwimmingIntensity = 0.1f;
@@ -91,6 +92,16 @@ namespace MyBhapticsTactsuit
                 Thread.Sleep(SwimmingDelay);
             }
         }
+        public void TeleportationFunc()
+        {
+            while (true)
+            {
+                // Check if reset event is active
+                Teleportation_mrse.WaitOne();
+                PlaybackHaptics("Teleporting");
+                Thread.Sleep(1000);
+            }
+        }
 
         public TactsuitVR()
         {
@@ -116,6 +127,8 @@ namespace MyBhapticsTactsuit
             LowWaterThread.Start(); 
             Thread SwimmingThread = new Thread(SwimmingFunc);
             SwimmingThread.Start();
+            Thread TeleportationThread = new Thread(TeleportationFunc);
+            TeleportationThread.Start();
         }
 
         public void LOG(string logStr)
@@ -231,6 +244,15 @@ namespace MyBhapticsTactsuit
                 SwimmingEffectStarted = false;
             }
         }
+        public void StartTeleportation()
+        {
+            Teleportation_mrse.Set();
+        }
+
+        public void StopTeleportation()
+        {
+            Teleportation_mrse.Reset();
+        }
 
         public void StopHapticFeedback(String effect)
         {
@@ -253,6 +275,7 @@ namespace MyBhapticsTactsuit
             StopLowOxygen();
             StopLowWater();
             StopSwimming();
+            StopTeleportation();
         }
     }
 }
