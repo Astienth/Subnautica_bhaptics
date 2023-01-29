@@ -19,6 +19,14 @@ namespace MyBhapticsTactsuit
         private static ManualResetEvent LowOxygen_mrse = new ManualResetEvent(false);
         private static ManualResetEvent LowFood_mrse = new ManualResetEvent(false);
         private static ManualResetEvent LowWater_mrse = new ManualResetEvent(false);
+        private static ManualResetEvent Swimming_mrse = new ManualResetEvent(false);
+
+        public int SwimmingDelay = 1000;
+        public float SwimmingIntensity = 0.1f;
+        public bool SwimmingEffectActive = false;
+        public bool SwimmingEffectStarted = false;
+        public bool seaGlideEquipped = false;
+
         // dictionary of all feedback patterns found in the bHaptics directory
         public Dictionary<String, FileInfo> FeedbackMap = new Dictionary<String, FileInfo>();
 
@@ -68,6 +76,21 @@ namespace MyBhapticsTactsuit
                 Thread.Sleep(1000);
             }
         }
+        public void SwimmingFunc()
+        {
+            while (true)
+            {
+                // Check if reset event is active
+                Swimming_mrse.WaitOne();
+                PlaybackHaptics("Swimming", true, SwimmingIntensity);
+                if (seaGlideEquipped)
+                {
+                    PlaybackHaptics("RecoilArm_L", true, SwimmingIntensity);
+                    PlaybackHaptics("RecoilArm_R", true, SwimmingIntensity);
+                }
+                Thread.Sleep(SwimmingDelay);
+            }
+        }
 
         public TactsuitVR()
         {
@@ -90,7 +113,9 @@ namespace MyBhapticsTactsuit
             Thread LowFoodThread = new Thread(LowFoodFunc);
             LowFoodThread.Start();
             Thread LowWaterThread = new Thread(LowFoodFunc);
-            LowWaterThread.Start();
+            LowWaterThread.Start(); 
+            Thread SwimmingThread = new Thread(SwimmingFunc);
+            SwimmingThread.Start();
         }
 
         public void LOG(string logStr)
@@ -189,6 +214,23 @@ namespace MyBhapticsTactsuit
         {
             LowWater_mrse.Reset();
         }
+        public void StartSwimming()
+        {
+            if (SwimmingEffectActive && !SwimmingEffectStarted)
+            {
+                Swimming_mrse.Set();
+                SwimmingEffectStarted = true;
+            }
+        }
+
+        public void StopSwimming()
+        {
+            if (SwimmingEffectActive && SwimmingEffectStarted)
+            {
+                Swimming_mrse.Reset();
+                SwimmingEffectStarted = false;
+            }
+        }
 
         public void StopHapticFeedback(String effect)
         {
@@ -209,6 +251,8 @@ namespace MyBhapticsTactsuit
             StopHeartBeat();
             StopLowFood();
             StopLowOxygen();
+            StopLowWater();
+            StopSwimming();
         }
 
 
