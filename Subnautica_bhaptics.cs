@@ -192,6 +192,7 @@ namespace Subnautica_bhaptics
                 return;
             }
             Plugin.tactsuitVr.StopLowFood();
+            Plugin.tactsuitVr.PlaybackHaptics("Eating");
         }
     }
 
@@ -225,6 +226,7 @@ namespace Subnautica_bhaptics
                 return;
             }
             Plugin.tactsuitVr.StopHeartBeat();
+            Plugin.tactsuitVr.PlaybackHaptics("Heal");
         }
     }
 
