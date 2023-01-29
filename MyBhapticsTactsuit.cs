@@ -254,7 +254,5 @@ namespace MyBhapticsTactsuit
             StopLowWater();
             StopSwimming();
         }
-
-
     }
 }

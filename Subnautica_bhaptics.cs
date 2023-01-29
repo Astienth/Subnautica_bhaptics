@@ -135,7 +135,7 @@ namespace Subnautica_bhaptics
             {
                 return;
             }
-            Plugin.tactsuitVr.PlaybackHaptics("Impact");
+            Plugin.tactsuitVr.PlaybackHaptics("Impact", true, 2f);
         }
     }
 
