@@ -116,7 +116,7 @@ namespace Subnautica_bhaptics
         }
 
         [HarmonyPatch(typeof(Player), "UpdateIsUnderwaterForSwimming")]
-        public class bhaptics_OnExitWater
+        public class bhaptics_OnEnterExitWater
         {
             public static bool isUnderwaterForSwimming = false;
 
@@ -155,7 +155,7 @@ namespace Subnautica_bhaptics
 
     [HarmonyPatch(typeof(Knife), "IsValidTarget")]
     [HarmonyPatch(typeof(StasisRifle), "Fire")]
-    public class bhaptics_OnKnifeAttack
+    public class bhaptics_OnToolsAttack
     {
         [HarmonyPostfix]
         public static void Postfix(bool __result)
@@ -186,6 +186,76 @@ namespace Subnautica_bhaptics
             }
             Plugin.tactsuitVr.PlaybackHaptics("Scanning_Vest");
             Plugin.tactsuitVr.PlaybackHaptics("Scanning_Arm_R");
+        }
+    }
+
+    #endregion
+
+    #region Vehicles
+
+    [HarmonyPatch(typeof(Vehicle), "PlaySplashSound")]
+    public class bhaptics_OnSplash
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("Splash_Arms");
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Vest");
+        }
+    }
+
+    [HarmonyPatch(typeof(LiveMixin), "TakeDamage")]
+    public class bhaptics_OnDamageVehicle
+    {
+        [HarmonyPostfix]
+        public static void Postfix(LiveMixin __instance, bool __result)
+        {
+            if (Plugin.tactsuitVr.suitDisabled || !__result)
+            {
+                return;
+            }
+            Plugin.Log.LogWarning("LIVEMIXIN NAME " + __instance.name);
+            Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Arms");
+            Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Vest");
+        }
+    }
+    
+    [HarmonyPatch(typeof(Exosuit), "OnLand")]
+    public class bhaptics_OnExosuitLanding
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("LandAfterJump");
+        }
+    }
+
+    [HarmonyPatch(typeof(Exosuit), "ApplyJumpForce")]
+    public class bhaptics_OnExosuitJumping
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Exosuit __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            bool grounded = Traverse.Create(__instance).Field("onGround").GetValue<bool>();
+            double timeLastJumped = (double)(Traverse.Create(__instance)
+                .Field("timeLastJumped").GetValue<float>()
+                + 1.0);
+            if (grounded && timeLastJumped <= (double)Time.time)
+            {
+                Plugin.tactsuitVr.PlaybackHaptics("LandAfterJump");
+            }
         }
     }
 
@@ -242,6 +312,40 @@ namespace Subnautica_bhaptics
             {
                 Plugin.tactsuitVr.StartLowOxygen();
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(uGUI_WaterBar), "OnPulse")]
+    public class bhaptics_OnLowWaterStart
+    {
+        [HarmonyPostfix]
+        public static void Postfix(uGUI_WaterBar __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            float pulseDelay = Traverse.Create(__instance).Field("pulseDelay").GetValue<float>();
+            if (pulseDelay <= 0.85f)
+            {
+                Plugin.tactsuitVr.StartLowWater();
+                return;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(uGUI_WaterBar), "OnDrink")]
+    public class bhaptics_OnLowWaterStop
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.StopLowWater();
+            Plugin.tactsuitVr.PlaybackHaptics("Eating");
         }
     }
 
