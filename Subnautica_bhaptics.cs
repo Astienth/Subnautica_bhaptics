@@ -17,7 +17,7 @@ namespace Subnautica_bhaptics
 #pragma warning restore CS0109
         public static TactsuitVR tactsuitVr;
         public static ConfigEntry<bool> swimmingEffects;
-
+        public static List<TechType> oneShotTypes = new List<TechType>();
 
         private void Awake()
         {
@@ -34,6 +34,11 @@ namespace Subnautica_bhaptics
             // patch all functions
             var harmony = new Harmony("bhaptics.patch.Subnautica_bhaptics");
             harmony.PatchAll();
+            //init types
+            oneShotTypes.Add(TechType.ExosuitClawArmModule);
+            oneShotTypes.Add(TechType.ExosuitGrapplingArmModule);
+            oneShotTypes.Add(TechType.ExosuitTorpedoArmModule);
+            oneShotTypes.Add(TechType.ExosuitPropulsionArmModule);
         }
     }
 
@@ -255,6 +260,112 @@ namespace Subnautica_bhaptics
             if (grounded && timeLastJumped <= (double)Time.time)
             {
                 Plugin.tactsuitVr.PlaybackHaptics("LandAfterJump");
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(ExosuitAnimation), "OnStep")]
+    public class bhaptics_OnExosuitWalking
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("LandAfterJump", true, 0.5f);
+        }
+    }
+
+    [HarmonyPatch(typeof(Exosuit), "SlotLeftDown")]
+    public class bhaptics_OnExosuitArmDown
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Exosuit __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            if (__instance.mainAnimator.GetBool("use_tool_left"))
+            {
+                TechType type = Traverse.Create(__instance).Field("currentLeftArmType")
+                    .GetValue<TechType>();
+                if (Plugin.oneShotTypes.Contains(type))
+                {
+                    Plugin.tactsuitVr.PlaybackHaptics("RecoilArm_L");
+                    Plugin.tactsuitVr.PlaybackHaptics("RecoilVest_L");
+                }
+                if(type == TechType.ExosuitDrillArmModule)
+                {
+                    Plugin.tactsuitVr.StartDrilling("left");
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Exosuit), "SlotLeftUp")]
+    public class bhaptics_OnExosuitArmUp
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Exosuit __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+             TechType type = Traverse.Create(__instance).Field("currentLeftArmType")
+                    .GetValue<TechType>();
+            if (type == TechType.ExosuitDrillArmModule)
+            {
+                Plugin.tactsuitVr.StopDrilling("left");
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Exosuit), "SlotRightDown")]
+    public class bhaptics_OnExosuitArmDownRight
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Exosuit __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            if (__instance.mainAnimator.GetBool("use_tool_right"))
+            {
+                TechType type = Traverse.Create(__instance).Field("currentRightArmType")
+                    .GetValue<TechType>();
+                if (Plugin.oneShotTypes.Contains(type))
+                {
+                    Plugin.tactsuitVr.PlaybackHaptics("RecoilArm_R");
+                    Plugin.tactsuitVr.PlaybackHaptics("RecoilVest_R");
+                }
+                if (type == TechType.ExosuitDrillArmModule)
+                {
+                    Plugin.tactsuitVr.StartDrilling("right");
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Exosuit), "SlotRightUp")]
+    public class bhaptics_OnExosuitArmUpRight
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Exosuit __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            TechType type = Traverse.Create(__instance).Field("currentRightArmType")
+                   .GetValue<TechType>();
+            if (type == TechType.ExosuitDrillArmModule)
+            {
+                Plugin.tactsuitVr.StopDrilling("right");
             }
         }
     }

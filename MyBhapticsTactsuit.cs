@@ -21,6 +21,8 @@ namespace MyBhapticsTactsuit
         private static ManualResetEvent LowWater_mrse = new ManualResetEvent(false);
         private static ManualResetEvent Swimming_mrse = new ManualResetEvent(false);
         private static ManualResetEvent Teleportation_mrse = new ManualResetEvent(false);
+        private static ManualResetEvent DrillingLeft_mrse = new ManualResetEvent(false);
+        private static ManualResetEvent DrillingRight_mrse = new ManualResetEvent(false);
 
         public int SwimmingDelay = 1000;
         public float SwimmingIntensity = 0.1f;
@@ -86,8 +88,7 @@ namespace MyBhapticsTactsuit
                 PlaybackHaptics("Swimming", true, SwimmingIntensity);
                 if (seaGlideEquipped)
                 {
-                    PlaybackHaptics("RecoilArm_L", true, SwimmingIntensity);
-                    PlaybackHaptics("RecoilArm_R", true, SwimmingIntensity);
+                    PlaybackHaptics("EnterWater_Arms", true, SwimmingIntensity);
                 }
                 Thread.Sleep(SwimmingDelay);
             }
@@ -99,6 +100,28 @@ namespace MyBhapticsTactsuit
                 // Check if reset event is active
                 Teleportation_mrse.WaitOne();
                 PlaybackHaptics("Teleporting");
+                Thread.Sleep(1000);
+            }
+        }
+        public void DrillingLeftFunc()
+        {
+            while (true)
+            {
+                // Check if reset event is active
+                DrillingLeft_mrse.WaitOne();
+                PlaybackHaptics("DrillingArm_L");
+                PlaybackHaptics("DrillingVest_L");
+                Thread.Sleep(1000);
+            }
+        }
+        public void DrillingRightFunc()
+        {
+            while (true)
+            {
+                // Check if reset event is active
+                DrillingRight_mrse.WaitOne();
+                PlaybackHaptics("DrillingArm_R");
+                PlaybackHaptics("DrillingVest_R");
                 Thread.Sleep(1000);
             }
         }
@@ -129,6 +152,10 @@ namespace MyBhapticsTactsuit
             SwimmingThread.Start();
             Thread TeleportationThread = new Thread(TeleportationFunc);
             TeleportationThread.Start();
+            Thread DrillingLeftThread = new Thread(DrillingLeftFunc);
+            DrillingLeftThread.Start();
+            Thread DrillingRightThread = new Thread(DrillingRightFunc);
+            DrillingRightThread.Start();
         }
 
         public void LOG(string logStr)
@@ -253,6 +280,29 @@ namespace MyBhapticsTactsuit
         {
             Teleportation_mrse.Reset();
         }
+        public void StartDrilling(string side)
+        {
+            if (side == "left")
+            {
+                DrillingLeft_mrse.Set();
+            }
+            if(side == "right")
+            {
+                DrillingRight_mrse.Set();
+            }
+        }
+
+        public void StopDrilling(string side)
+        {
+            if(side == "left")
+            {
+                DrillingLeft_mrse.Reset();
+            }
+            if(side == "right")
+            {
+                DrillingRight_mrse.Reset();
+            }
+        }
 
         public void StopHapticFeedback(String effect)
         {
@@ -276,6 +326,8 @@ namespace MyBhapticsTactsuit
             StopLowWater();
             StopSwimming();
             StopTeleportation();
+            StopDrilling("left");
+            StopDrilling("right");
         }
     }
 }
