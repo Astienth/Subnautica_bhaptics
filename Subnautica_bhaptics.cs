@@ -68,7 +68,7 @@ namespace Subnautica_bhaptics
             {
                 return;
             }
-            if(__instance.isUnderwaterForSwimming.value)
+            if (__instance.isUnderwaterForSwimming.value)
             {
                 //start thread
                 Plugin.tactsuitVr.StartSwimming();
@@ -76,13 +76,13 @@ namespace Subnautica_bhaptics
                 Plugin.tactsuitVr.seaGlideEquipped = __instance.motorMode == Player.MotorMode.Seaglide;
                 //calculate delay and intensity
                 int delay = (int)((30 - Math.Truncate(__instance.movementSpeed * 10)) * 100);
-                Plugin.tactsuitVr.SwimmingDelay = 
-                    (delay > 0) 
+                Plugin.tactsuitVr.SwimmingDelay =
+                    (delay > 0)
                     ?
-                    (delay < 3000) 
+                    (delay < 3000)
                         ? delay : 3000
                     : 1000;
-                    
+
                 float intensity = (float)(Math.Truncate(__instance.movementSpeed * 10) / 30);
                 Plugin.tactsuitVr.SwimmingIntensity = intensity;
             }
@@ -91,66 +91,66 @@ namespace Subnautica_bhaptics
                 Plugin.tactsuitVr.StopSwimming();
             }
         }
+    }
 
-        [HarmonyPatch(typeof(PrecursorTeleporter), "OnPlayerCinematicModeEnd")]
-        public class bhaptics_OnTeleportingStart
+    [HarmonyPatch(typeof(PrecursorTeleporter), "OnPlayerCinematicModeEnd")]
+    public class bhaptics_OnTeleportingStart
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
         {
-            [HarmonyPostfix]
-            public static void Postfix()
+            if (Plugin.tactsuitVr.suitDisabled)
             {
-                if (Plugin.tactsuitVr.suitDisabled)
-                {
-                    return;
-                }
-                Plugin.tactsuitVr.StartTeleportation();
+                return;
             }
+            Plugin.tactsuitVr.StartTeleportation();
+        }
+    }
+
+    [HarmonyPatch(typeof(Player), "CompleteTeleportation")]
+    public class bhaptics_OnTeleportingStop
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.StopTeleportation();
+        }
+    }
+
+    [HarmonyPatch(typeof(Player), "UpdateIsUnderwater")]
+    public class bhaptics_OnEnterExitWater
+    {
+        public static bool isUnderwaterForSwimming = false;
+
+        [HarmonyPrefix]
+        public static void Prefix(Player __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            isUnderwaterForSwimming = __instance.isUnderwaterForSwimming.value;
         }
 
-        [HarmonyPatch(typeof(Player), "CompleteTeleportation")]
-        public class bhaptics_OnTeleportingStop
+        [HarmonyPostfix]
+        public static void Postfix(Player __instance)
         {
-            [HarmonyPostfix]
-            public static void Postfix()
+            if (Plugin.tactsuitVr.suitDisabled)
             {
-                if (Plugin.tactsuitVr.suitDisabled)
-                {
-                    return;
-                }
-                Plugin.tactsuitVr.StopTeleportation();
+                return;
             }
-        }
-
-        [HarmonyPatch(typeof(Player), "UpdateIsUnderwaterForSwimming")]
-        public class bhaptics_OnEnterExitWater
-        {
-            public static bool isUnderwaterForSwimming = false;
-
-            [HarmonyPrefix]
-            public static void Prefix(Player __instance)
+            if (__instance.isUnderwaterForSwimming.value != isUnderwaterForSwimming)
             {
-                if (Plugin.tactsuitVr.suitDisabled)
-                {
-                    return;
-                }
-                isUnderwaterForSwimming = __instance.isUnderwaterForSwimming.value;
+                Plugin.tactsuitVr.PlaybackHaptics(
+                    (!isUnderwaterForSwimming) ? "EnterWater_Vest" : "ExitWater_Vest"); 
+                Plugin.tactsuitVr.PlaybackHaptics(
+                    (!isUnderwaterForSwimming) ? "EnterWater_Arms" : "ExitWater_Arms");
             }
-
-            [HarmonyPostfix]
-            public static void Postfix(Player __instance)
-            {
-                if (Plugin.tactsuitVr.suitDisabled)
-                {
-                    return;
-                }
-                if (__instance.isUnderwaterForSwimming.value != isUnderwaterForSwimming)
-                {
-                    Plugin.tactsuitVr.PlaybackHaptics(
-                        (!isUnderwaterForSwimming) ? "EnterWater_Vest" : "ExitWater_Vest"); 
-                    Plugin.tactsuitVr.PlaybackHaptics(
-                        (!isUnderwaterForSwimming) ? "EnterWater_Arms" : "ExitWater_Arms");
-                }
-                isUnderwaterForSwimming = __instance.isUnderwaterForSwimming.value;
-            }
+            isUnderwaterForSwimming = __instance.isUnderwaterForSwimming.value;
         }
     }
 
@@ -159,8 +159,7 @@ namespace Subnautica_bhaptics
     #region Equipments
 
     [HarmonyPatch(typeof(Knife), "IsValidTarget")]
-    [HarmonyPatch(typeof(StasisRifle), "Fire")]
-    public class bhaptics_OnToolsAttack
+    public class bhaptics_OnKnifeAttack
     {
         [HarmonyPostfix]
         public static void Postfix(bool __result)
@@ -169,23 +168,177 @@ namespace Subnautica_bhaptics
             {
                 return;
             }
-            Plugin.tactsuitVr.PlaybackHaptics("RecoilArm_L");
+            Plugin.tactsuitVr.PlaybackHaptics("RecoilArm_R");
             Plugin.tactsuitVr.PlaybackHaptics("RecoilVest_R");
         }
     }
 
-    [HarmonyPatch(typeof(ScannerTool), "OnRightHandDown")]
-    [HarmonyPatch(typeof(AirBladder), "OnRightHandDown")]
-    [HarmonyPatch(typeof(BuilderTool), "OnRightHandDown")]
-    [HarmonyPatch(typeof(Constructor), "OnRightHandDown")]
-    [HarmonyPatch(typeof(PropulsionCannonWeapon), "OnRightHandDown")]
-    [HarmonyPatch(typeof(StasisRifle), "OnRightHandDown")]
-    public class bhaptics_Onscanning
+    [HarmonyPatch(typeof(StasisRifle), "Fire")]
+    public class bhaptics_OnStatisAttack
     {
         [HarmonyPostfix]
         public static void Postfix()
         {
             if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("RecoilArm_R");
+            Plugin.tactsuitVr.PlaybackHaptics("RecoilVest_R");
+        }
+    }
+
+    [HarmonyPatch(typeof(ScannerTool), "OnRightHandDown")]
+    public class bhaptics_Onscanning
+    {
+        [HarmonyPostfix]
+        public static void Postfix(bool __result)
+        {
+            if (Plugin.tactsuitVr.suitDisabled || !__result)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Vest");
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Arm_R");
+        }
+    }
+    [HarmonyPatch(typeof(AirBladder), "OnRightHandDown")]
+    public class bhaptics_OnAirBladder
+    {
+        [HarmonyPostfix]
+        public static void Postfix(bool __result)
+        {
+            if (Plugin.tactsuitVr.suitDisabled || !__result)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Vest");
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Arm_R");
+        }
+    }
+
+    [HarmonyPatch(typeof(Welder), "Weld")]
+    public class bhaptics_Welder
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.StartDrilling("right");
+        }
+    }
+
+    [HarmonyPatch(typeof(Welder), "StopWeldingFX")]
+    public class bhaptics_StopWeldingFX
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.StopDrilling("right");
+        }
+    }
+
+    [HarmonyPatch(typeof(LaserCutter), "StartLaserCuttingFX")]
+    public class bhaptics_LaserCutterStart
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.StartDrilling("right");
+        }
+    }
+
+    [HarmonyPatch(typeof(LaserCutter), "StopLaserCuttingFX")]
+    public class bhaptics_LaserCutterStop
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.StopDrilling("right");
+        }
+    }
+
+    [HarmonyPatch(typeof(BuilderTool), "OnRightHandDown")]
+    public class bhaptics_OnBuilderTool
+    {
+        [HarmonyPostfix]
+        public static void Postfix(bool __result)
+        {
+            if (Plugin.tactsuitVr.suitDisabled || !__result)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Vest");
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Arm_R");
+        }
+    }
+
+    [HarmonyPatch(typeof(Constructor), "OnRightHandDown")]
+    public class bhaptics_OnConstructor
+    {
+        [HarmonyPostfix]
+        public static void Postfix(bool __result)
+        {
+            if (Plugin.tactsuitVr.suitDisabled || !__result)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Vest");
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Arm_R");
+        }
+    }
+    [HarmonyPatch(typeof(PropulsionCannon), "GrabObject")]
+    public class bhaptics_OnPropulsionCannon
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Vest");
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Arm_R");
+        }
+    }
+    
+    [HarmonyPatch(typeof(PropulsionCannon), "OnShoot")]
+    public class bhaptics_OnPropulsionCannonShoot
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("RecoilArm_R");
+            Plugin.tactsuitVr.PlaybackHaptics("RecoilVest_R");
+        }
+    }
+
+    [HarmonyPatch(typeof(StasisRifle), "OnRightHandDown")]
+    public class bhaptics_OnStatisCharging
+    {
+        [HarmonyPostfix]
+        public static void Postfix(bool __result)
+        {
+            if (Plugin.tactsuitVr.suitDisabled || !__result)
             {
                 return;
             }
@@ -209,23 +362,69 @@ namespace Subnautica_bhaptics
                 return;
             }
             Plugin.tactsuitVr.PlaybackHaptics("Splash_Arms");
-            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Vest");
+            Plugin.tactsuitVr.PlaybackHaptics("Splash_Vest");
         }
     }
-
-    [HarmonyPatch(typeof(LiveMixin), "TakeDamage")]
+    
+    [HarmonyPatch(typeof(uGUI_SeamothHUD), "Update")]
     public class bhaptics_OnDamageVehicle
     {
-        [HarmonyPostfix]
-        public static void Postfix(LiveMixin __instance, bool __result)
+        public static int health;
+
+        [HarmonyPrefix]
+        public static void Prefix(uGUI_SeamothHUD __instance)
         {
-            if (Plugin.tactsuitVr.suitDisabled || !__result)
+            if (Plugin.tactsuitVr.suitDisabled)
             {
                 return;
             }
-            Plugin.Log.LogWarning("LIVEMIXIN NAME " + __instance.name);
-            Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Arms");
-            Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Vest");
+            health = Traverse.Create(__instance).Field("lastHealth").GetValue<int>();
+        }
+
+        [HarmonyPostfix]
+        public static void Postfix(uGUI_SeamothHUD __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            if (health > Traverse.Create(__instance).Field("lastHealth").GetValue<int>())
+            {
+                Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Arms");
+                Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Vest");
+                health = Traverse.Create(__instance).Field("lastHealth").GetValue<int>();
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(uGUI_ExosuitHUD), "Update")]
+    public class bhaptics_OnDamageExosuit
+    {
+        public static int health;
+
+        [HarmonyPrefix]
+        public static void Prefix(uGUI_ExosuitHUD __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            health = Traverse.Create(__instance).Field("lastHealth").GetValue<int>();
+        }
+
+        [HarmonyPostfix]
+        public static void Postfix(uGUI_ExosuitHUD __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            if (health != Traverse.Create(__instance).Field("lastHealth").GetValue<int>())
+            {
+                Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Arms");
+                Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Vest");
+                health = Traverse.Create(__instance).Field("lastHealth").GetValue<int>();
+            }
         }
     }
     
@@ -246,8 +445,8 @@ namespace Subnautica_bhaptics
     [HarmonyPatch(typeof(Exosuit), "ApplyJumpForce")]
     public class bhaptics_OnExosuitJumping
     {
-        [HarmonyPostfix]
-        public static void Postfix(Exosuit __instance)
+        [HarmonyPrefix]
+        public static void Prefix(Exosuit __instance)
         {
             if (Plugin.tactsuitVr.suitDisabled)
             {
@@ -257,27 +456,29 @@ namespace Subnautica_bhaptics
             double timeLastJumped = (double)(Traverse.Create(__instance)
                 .Field("timeLastJumped").GetValue<float>()
                 + 1.0);
+            Plugin.Log.LogWarning("JUMP "+grounded+" "+timeLastJumped+" "+ (double)Time.time);
             if (grounded && timeLastJumped <= (double)Time.time)
             {
                 Plugin.tactsuitVr.PlaybackHaptics("LandAfterJump");
             }
         }
     }
-
-    [HarmonyPatch(typeof(ExosuitAnimation), "OnStep")]
+    /*
+    [HarmonyPatch(typeof(Utils), "PlayFMODAsset")]
     public class bhaptics_OnExosuitWalking
     {
         [HarmonyPostfix]
-        public static void Postfix()
+        public static void Postfix(FMODAsset sound)
         {
             if (Plugin.tactsuitVr.suitDisabled)
             {
                 return;
             }
-            Plugin.tactsuitVr.PlaybackHaptics("LandAfterJump", true, 0.5f);
+            Plugin.Log.LogWarning("SOUND "+ )
+            //Plugin.tactsuitVr.PlaybackHaptics("LandAfterJump", true, 0.5f);
         }
     }
-
+    */
     [HarmonyPatch(typeof(Exosuit), "SlotLeftDown")]
     public class bhaptics_OnExosuitArmDown
     {
@@ -531,6 +732,19 @@ namespace Subnautica_bhaptics
     #endregion
 
     [HarmonyPatch(typeof(Player), "OnDestroy")]
+    public class bhaptics_OnPlayerDestroy
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.StopThreads();
+        }
+    }
+
     [HarmonyPatch(typeof(Player), "OnDisable")]
     public class bhaptics_OnPlayerDisabled
     {
