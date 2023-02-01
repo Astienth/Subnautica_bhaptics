@@ -115,10 +115,6 @@
     <Compile Include="MyBhapticsTactsuit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>call "D:\bHaptics\Subnautica\Dev\Subnautica_bhaptics\bin\copy.bat"</PostBuildEvent>

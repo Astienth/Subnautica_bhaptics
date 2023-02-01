@@ -463,22 +463,7 @@ namespace Subnautica_bhaptics
             }
         }
     }
-    /*
-    [HarmonyPatch(typeof(Utils), "PlayFMODAsset")]
-    public class bhaptics_OnExosuitWalking
-    {
-        [HarmonyPostfix]
-        public static void Postfix(FMODAsset sound)
-        {
-            if (Plugin.tactsuitVr.suitDisabled)
-            {
-                return;
-            }
-            Plugin.Log.LogWarning("SOUND "+ )
-            //Plugin.tactsuitVr.PlaybackHaptics("LandAfterJump", true, 0.5f);
-        }
-    }
-    */
+
     [HarmonyPatch(typeof(Exosuit), "SlotLeftDown")]
     public class bhaptics_OnExosuitArmDown
     {
