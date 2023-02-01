@@ -351,6 +351,38 @@ namespace Subnautica_bhaptics
 
     #region Vehicles
 
+    [HarmonyPatch(typeof(CyclopsExternalDamageManager), "OnTakeDamage")]
+    public class bhaptics_OnCyclopDamage
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Arms");
+            Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Vest");
+        }
+    }
+
+    [HarmonyPatch(typeof(CyclopsEngineChangeState), "OnClick")]
+    public class bhaptics_OnCyclopEngineStart
+    {
+        [HarmonyPrefix]
+        public static void Prefix(CyclopsEngineChangeState __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            if (!__instance.motorMode.engineOn)
+            {
+                Plugin.tactsuitVr.PlaybackHaptics("LandAfterJump", true, 1f, 4f);
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(Vehicle), "PlaySplashSound")]
     public class bhaptics_OnSplash
     {
