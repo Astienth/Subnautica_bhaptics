@@ -6,8 +6,6 @@
 
 This mod adds bhaptics (vest and arms) support to the game
 
-☕ If you wanna show some support you can buy me a coffee : https://www.buymeacoffee.com/astienth4
-
 # Installation
 
 1. **Download** [Bepinex 5.4](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.21) and extract it in the game root folder.
