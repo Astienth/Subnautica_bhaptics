@@ -149,6 +149,7 @@ namespace Subnautica_bhaptics
                     (!isUnderwaterForSwimming) ? "EnterWater_Vest" : "ExitWater_Vest"); 
                 Plugin.tactsuitVr.PlaybackHaptics(
                     (!isUnderwaterForSwimming) ? "EnterWater_Arms" : "ExitWater_Arms");
+                Plugin.tactsuitVr.PlaybackHaptics("waterVisor");
             }
             isUnderwaterForSwimming = __instance.isUnderwaterForSwimming.value;
         }
@@ -363,6 +364,7 @@ namespace Subnautica_bhaptics
             }
             Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Arms");
             Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Vest");
+            Plugin.tactsuitVr.PlaybackHaptics("impactVisor");
         }
     }
 
@@ -395,6 +397,7 @@ namespace Subnautica_bhaptics
             }
             Plugin.tactsuitVr.PlaybackHaptics("Splash_Arms");
             Plugin.tactsuitVr.PlaybackHaptics("Splash_Vest");
+            Plugin.tactsuitVr.PlaybackHaptics("waterVisor");
         }
     }
     
@@ -424,6 +427,7 @@ namespace Subnautica_bhaptics
             {
                 Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Arms");
                 Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Vest");
+                Plugin.tactsuitVr.PlaybackHaptics("impactVisor");
                 health = Traverse.Create(__instance).Field("lastHealth").GetValue<int>();
             }
         }
@@ -455,6 +459,7 @@ namespace Subnautica_bhaptics
             {
                 Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Arms");
                 Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Vest");
+                Plugin.tactsuitVr.PlaybackHaptics("impactVisor");
                 health = Traverse.Create(__instance).Field("lastHealth").GetValue<int>();
             }
         }
@@ -618,6 +623,7 @@ namespace Subnautica_bhaptics
                 return;
             }
             Plugin.tactsuitVr.PlaybackHaptics("Impact", true, 2f);
+            Plugin.tactsuitVr.PlaybackHaptics("impactVisor");
         }
     }
 
